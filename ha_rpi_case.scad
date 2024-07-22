@@ -10,9 +10,35 @@ case_tilt = -5;
 faceplate_thk = 2;
 
 
+
+$vpr = [90-7.5, 0, 30];
+$vpt = [0, -25, -12.5];
+$vpd = 650;
+$t=1;
+
+!rotate([90,0,0]) union() {
+    drop_assmb(1) import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_frame.stl");
+    
+    
+    drop_assmb(3) trans_tilt() import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_cameramount_p1.stl");
+    drop_assmb(4) trans_tilt() import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_cameramount_p2.stl");
+    
+     
+    drop_assmb(2) import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_shell.stl");
+    
+    drop_assmb(5) trans_tilt() import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_sensormount.stl");
+    
+    *drop_assmb(6) trans_tilt() import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_face.stl");
+}
+
+module drop_assmb(num) {
+    translate([0,0,500*pow(min(0,$t-(num+3)/(6+3)),2)]) children();
+}
+
+
 *%trans_tilt() screen_co();
 *%trans_tilt() translate([0,65,-12]) !camera_co();
-*%rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,4+2.8]) {
+%rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,4+2.8]) {
     translate([0,85-20,0]) cube([56,20,17.4]);
     cube([56,85,5]);
 }
@@ -20,8 +46,8 @@ faceplate_thk = 2;
 //camera clamp
 *trans_tilt() camera_plate();
 *trans_tilt() camera_plate2();
-walls();
-base();
+*walls();
+*base();
 
 *trans_tilt() difference() {
     !faceplate();
@@ -29,7 +55,7 @@ base();
 }
 
 
-difference() {
+*difference() {
     trans_tilt() intersection() {
         union() {
             camera_boss();
