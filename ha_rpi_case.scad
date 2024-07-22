@@ -1,3 +1,11 @@
+/*
+ * Raspberry Pi Wall Mount case
+ * Licenced under CC BY-NC-SA 4.0
+ * By: TSnoad
+ * https://github.com/tsnoad/rpi_wall_case
+ * https://hackaday.io/project/197028-raspberry-pi-wall-panel
+ */
+
 $fn = 18;
 
 m3_v_r = (3+0.5-0.1)/2;
