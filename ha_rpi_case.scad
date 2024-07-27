@@ -6,17 +6,16 @@
  * https://hackaday.io/project/197028-raspberry-pi-wall-panel
  */
 
-$fn = 18;
+$fn = 18; //rendering resolution
 
-m3_v_r = (3+0.5-0.1)/2;
+m3_v_r = (3+0.5-0.1)/2; //radius of m3 bolts, including clearance
 
-casecrn_rad = 20;
+casecrn_rad = 20; //radius of the corners of the case
 
-case_proj = 35;
-case_tilt = -5;
+case_proj = 35; //how far does the case stick out
+case_tilt = -5; //how tilted is the case
 
-faceplate_thk = 2;
-
+faceplate_thk = 2; //how thick is the facplate
 
 
 $vpr = [90-7.5, 0, 30];
