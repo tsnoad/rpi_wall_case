@@ -94,7 +94,7 @@ module bosses() difference() {
             hull() for(ix=[-(164.9/2),(164.9/2)]) for(iy=[-124.27/2,124.27/2]) translate([ix,iy,-(1.6+6.2)]) cylinder(r=0.5,10);
         }
         
-        translate([0,65,-12+0.01]) camera_co();
+        camera_pos() translate([0,0,0.01]) camera_co();
         
         translate([0,0,-(6.2)]) {
             for(ix=[-80,80]) for(iy=[-85]) translate([ix,iy,0]) screw_co(8,1.2,4);
@@ -212,14 +212,14 @@ module wall_attach_pos() {
         
 
 module camera_plate() difference() {
-    translate([0,65,-12+1]) difference() {
+    camera_pos() translate([0,0,1]) difference() {
         hull() for(ix=[-(17.5-5),(17.5-5)]) for(iy=[-5,10]) translate([ix,iy,0]) cylinder(r=5,h=3+0.6);
             
         translate([0,0,-1]) camera_co();
     }
     screen_co();
     
-    translate([0,65,-12+1]) for(ix=[-(17.5),(17.5)]) translate([ix,0,-1]) cylinder(r=5+0.25,h=100);
+    camera_pos() translate([0,0,1]) for(ix=[-(17.5),(17.5)]) translate([ix,0,-1]) cylinder(r=5+0.25,h=100);
     
     //translate([0,0,-200]) cylinder(r=200,h=200);
 }
@@ -228,7 +228,7 @@ module camera_plate() difference() {
 module camera_plate2() intersection() {
     pcb_m = 0.5;
     
-    translate([0,65,-12+1]) difference() {
+    camera_pos() translate([0,0,1]) difference() {
         translate([0,0,3+0.6]) {
             hull() for(ix=[-20,20]) for(iy=[-5,10]) translate([ix,iy,0]) cylinder(r=5,h=4);
                 
@@ -251,7 +251,7 @@ module camera_plate2() intersection() {
         translate([0,0,-1-0.01]) camera_co();
     }
     
-    translate([0,65,-12+1]) {
+    camera_pos() translate([0,0,1]) {
         translate([0,0,3+0.6]) {
             hull() for(ix=[-20,20]) for(iy=[-5,12.5]) translate([ix,iy,0]) cylinder(r1=5,r2=5+20*tan(25),h=20);
         }
@@ -330,12 +330,12 @@ module camera_boss() {
             }
         }
             
-        translate([0,65,-12+1]) difference() {
+        camera_pos() translate([0,0,1]) difference() {
             hull() for(ix=[-(17.5-5),(17.5-5)]) for(iy=[-20,12.5]) translate([ix,iy,0]) cylinder(r=5+0.4,h=50);
         }
     }
     
-    translate([0,65,-100-12+1]) {
+    camera_pos() translate([0,0,-100+1]) {
         for(ix=[-(17.5),(17.5)]) translate([ix,0,0]) cylinder(r=5,h=100+(3+0.6)-0.4);
     }
 }
@@ -601,13 +601,13 @@ module faceplate() union() {
                 translate([0,0,-6.2]) cylinder(r=5,h=2+6.2);
             }
             
-            *translate([0,65,-(12-0.2)]) {
+            *camera_pos() translate([0,0,0.2]) {
                 hull() for(ix=[-10,10]) for(iy=[-5,10]) translate([ix,iy,1+3+0.6]) {
                     translate([0,0,0.5]) cylinder(r=5,h=-(-12+1+3+0.6)+2-0.2-0.5);
                     cylinder(r=5-0.5,h=-(-12+1+3+0.6)+2-0.2);
                 }
             }
-            *translate([0,65,0]) {
+            *camera_pos() translate([0,0,12]) {
                 hull() for(ix=[-10,10]) for(iy=[-5,10]) translate([ix,iy,0]) {
                     translate([0,0,-0.5]) cylinder(r=5,h=2+0.5);
                     cylinder(r=5+0.5,h=2);
@@ -626,10 +626,10 @@ module faceplate() union() {
         
         screen_co();
         
-        *translate([0,65,-12-0.01]) camera_co(0.5,false);
+        *camera_pos() translate([0,0,-0.01]) camera_co(0.5,false);
         
         pcb_m = 0.5;
-        translate([0,65,0]) {
+        camera_pos() translate([0,0,12]) {
             for(iz=[-(-12+1+3+0.6)+faceplate_thk]) {
                 hull() for(ix=[0,1]) mirror([ix,0,0]) for(iy=[0,1]) mirror([0,iy,0]) {
                     translate([(iz)*tan(62.2/2)+4-2,(iz)*tan(48.4/2)+4-2,-1]) {
@@ -869,6 +869,10 @@ module screw_co(screw_len=8,h2,h3) {
             translate([0,0,-0.6]) cylinder(r=3,20);
         }
     }
+}
+
+module camera_pos() {
+    translate([0,65,-12]) children();
 }
 
 module camera_co(pcb_m=0.5,include_screws=true) {
