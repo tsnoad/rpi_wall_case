@@ -63,17 +63,30 @@ module drop_assmb(num) {
 }
 
 
-*difference() {
-    trans_tilt() intersection() {
-        union() {
-            camera_boss();
-            corner_bosses();
-            sensor_boss();
+module bosses() difference() {
+    union() {
+        trans_tilt() intersection() {
+            union() {
+                camera_boss();
+                sensor_boss();
+            }
+            
+            *hull() {
+                crns_case(true,casecrn_rad);
+            }
+            
+            
+            trans_untilt() linear_extrude(height=50) projection(cut=true) {
+                trans_tilt() hull() {
+                    crns_case(true,casecrn_rad-2.4-0.4);
+                }
+            }
         }
-        
-        hull() {
-            crns_case(true,casecrn_rad);
-        }
+        trans_tilt() corner_bosses();
+    }
+    
+    hull() for(ix=[-60,60]) for(iy=[5,40]) {
+        translate([ix,iy,-1]) cylinder(r=5,h=50);
     }
     
     trans_tilt() {
@@ -93,7 +106,7 @@ module drop_assmb(num) {
     translate([0,0,-200]) cylinder(r=200,h=200);
 }
 
-*trans_tilt() difference() {
+module sensor_plate() difference() {
     union() {
         translate([0,0,-(6.2)]) {
             hull() for(ix=[-25,70]) for(iy=[-85-10,-85+10]) translate([ix,iy,0]) cylinder(r=5,h=6.2);
@@ -120,38 +133,80 @@ module drop_assmb(num) {
     }
 }
 
-module walls() difference() {
-    trans_tilt() {
-        intersection() {
-            hull() crns_case(true,casecrn_rad);
-            hull() crns_case() translate([0,0,-100]) cylinder(r1=casecrn_rad-0.8+100,r2=casecrn_rad-0.8,h=100);
-        }
-        
-        hull() for(iz=[0,-(22+6.2)]) for(iy=[-124.27/2+70,124.27/2-17]) {
-            translate([(164.9/2)+12+0.5-10,iy,iz]) {
-                sphere(r=10+1.6);
-                translate([-10,0,-10]) sphere(r=10+1.6);
+module walls() {
+    difference() {
+        trans_tilt() {
+            intersection() {
+                hull() crns_case(true,casecrn_rad);
+                hull() crns_case() translate([0,0,-100]) cylinder(r1=casecrn_rad-0.8+100,r2=casecrn_rad-0.8,h=100);
+            }
+            
+            //bulge for screen cables
+            hull() for(iz=[0,-(22+6.2)]) for(iy=[-124.27/2+70,124.27/2-17]) {
+                translate([(164.9/2)+12+0.5-10,iy,iz]) {
+                    sphere(r=10+1.6);
+                    translate([-10,0,-10]) sphere(r=10+1.6);
+                }
             }
         }
-    }
-    trans_tilt() cylinder(r=200,h=200);
-    trans_tilt() {
-        hull() crns_case(true,casecrn_rad-2.4);
-        
-        hull() for(iz=[0,-(22+6.2)]) for(iy=[-124.27/2+70,124.27/2-17]) {
-            translate([(164.9/2)+12+0.5-10,iy,iz]) {
-                sphere(r=10);
-                translate([-10,0,-10]) sphere(r=10);
+        //cut off top
+        trans_tilt() cylinder(r=200,h=200);
+        //cut out body
+        trans_tilt() {
+            hull() crns_case(true,casecrn_rad-2.4);
+            
+            //bulge for screen cables
+            hull() for(iz=[0,-(22+6.2)]) for(iy=[-124.27/2+70,124.27/2-17]) {
+                translate([(164.9/2)+12+0.5-10,iy,iz]) {
+                    sphere(r=10);
+                    translate([-10,0,-10]) sphere(r=10);
+                }
             }
         }
+        //cut out bottom
+        translate([0,0,-200+1]) cylinder(r=200,h=200);
+        
+        //trans_tilt() translate([0,0,0.01]) screen_co();
+        
+        *rasp_cab_co(true);
+        
+        
+        //ventilation holes
+        *for(ixm=[0,1]) mirror([ixm,0,0]) hull() for(ix=[40,55]) translate([ix,70,4+2.5]) rotate([-90,0,0]) cylinder_oh(2.5,50);
     }
-    translate([0,0,-200]) cylinder(r=200,h=200);
     
-    trans_tilt() translate([0,0,0.01]) screen_co();
-    
-    rasp_cab_co(true);
-    
-    for(ixm=[0,1]) mirror([ixm,0,0]) hull() for(ix=[40,55]) translate([ix,70,4+2.5]) rotate([-90,0,0]) cylinder_oh(2.5,50);
+    intersection() {
+        trans_tilt() hull() crns_case(true,casecrn_rad);
+        
+        wall_attach_pos() difference() {
+            hull() for(ix=[0,20]) translate([ix,0,1]) {
+                cylinder(r=5+0.25+2.4+0.25-0.25,h=-1+4+4+2-0.75);
+                translate([0,0,0.25]) {
+                    cylinder(r=5+0.25+2.4+0.25-0.75,h=-1+4+4+2-0.25);
+                    cylinder(r=5+0.25+2.4+0.25,h=-1+4+4+2-0.25-0.75);
+                }
+            }
+            translate([0,0,8]) screw_co(8,2+0.4,50);
+            
+            cylinder(r=5+0.25,h=4+4);
+            
+            hull() {
+                cylinder(r=5+0.25+0.25,h=1);
+                cylinder(r=5+0.25,h=1+0.25);
+            }
+            
+            translate([-1.75,-1.75,0]) cube([2*1.75,2*1.75,8+0.4]);
+            translate([-sqrt(pow(5+0.25,2)-pow(1.75,2)),-1.75,0]) cube([2*sqrt(pow(5+0.25,2)-pow(m3_v_r,2)),2*1.75,8+0.2]);
+        }
+    }
+}
+
+module wall_attach_pos() {
+    for(ixm=[0,1]) mirror([ixm,0,0]) {
+        for(iy=(ixm==0?[-32.5]:[-40,35])) translate([82.5,iy,0]) {
+            children();
+        }
+    }
 }
 
   
@@ -211,29 +266,70 @@ module camera_plate2() intersection() {
 //screen mounting bosses
 module corner_bosses() {
     intersection() {
-        crns_screws() translate([0,0,-100-(6.2)]) hull() {
-            cylinder(r=5,h=100);
-            
-            translate([100,0,0]) cylinder(r=5,h=100);
-            translate([100*tan(15),100,0]) cylinder(r=5,h=100);
+        for(ixm=[0,1]) mirror([ixm,0,0]) for(iym=[0,1]) mirror([0,iym,0]) {
+            hull() for(ib=[0,5]) intersection() {
+                translate([156.9/2,114.96/2,0]) {
+                    translate([0,0,-100-(6.2)]) {
+                        for(ix=[-5,5]) for(iy=[0,30]) translate([ix,iy,0]) {
+                            if (ix == -5 && iy == 0) {
+                                translate([5,0,0]) cylinder(r=5+ib,h=100);
+                                translate([0,5,0]) cylinder(r=5+ib,h=100);
+                            } else if (ix == -5 && iy == 30) {
+                                translate([5,0,0]) cylinder(r=5+ib,h=100);
+                                translate([0,-5,0]) cylinder(r=5+ib,h=100);
+                            } else {
+                                cylinder(r=5+ib,h=100);
+                            }
+                        }
+                    }
+                }
+                mirror([0,iym,0]) trans_untilt() translate([-200,-200,-100]) cube([400,400,100+4+(5-ib)]);
+            }
+            translate([156.9/2,114.96/2,0]) {
+                translate([0,0,-100-(6.2)]) {
+                    hull() for(ix=[-5,5]) for(iy=[0,30]) translate([ix,iy,0]) {
+                        if (ix == -5 && iy == 0) {
+                            translate([5,0,0]) cylinder(r=5,h=100);
+                            translate([0,5,0]) cylinder(r=5,h=100);
+                        } else if (ix == -5 && iy == 30) {
+                            translate([5,0,0]) cylinder(r=5,h=100);
+                            translate([0,-5,0]) cylinder(r=5,h=100);
+                        } else {
+                            cylinder(r=5,h=100);
+                        }
+                    }
+                }
+            }
         }
-        translate([-200,0,-100]) cube([400,200,200]);
+        
+        trans_untilt() linear_extrude(height=50) projection(cut=true) {
+            trans_tilt() hull() {
+                crns_case(true,casecrn_rad-2.4-0.4);
+            }
+        }
     }
-    intersection() {
-        crns_screws() translate([0,0,-100-(6.2)]) hull() {
-            cylinder(r=5,h=100);
-            
-            translate([100,0,0]) cylinder(r=5,h=100);
-            translate([0,25,0]) cylinder(r=5,h=100);
-            translate([(100-25)*tan(15),100,0]) cylinder(r=5,h=100);
+    
+    for(ixm=[0,1]) mirror([ixm,0,0]) hull() {
+        translate([0,0,-5-(6.2)]) {
+            for(ix=[80,80-2.5]) for(iy=[-85,-85+10]) {
+                for(iz=[0,-7.5]) {
+                    translate([ix+iz*tan(30)*cos(45),iy-iz*tan(30)*sin(45),iz]) cylinder(r=5,h=5);
+                }
+            }
         }
-        mirror([0,1,0]) translate([-200,0,-100]) cube([400,200,200]);
     }
 }
 
 module camera_boss() {
     difference() {
-        hull() for(ix=[-20,20]) for(iy=[65-10,100]) translate([ix,iy,-100-12+1]) cylinder(r=5,h=100+(3+0.6)-0.4);
+        union() {
+            hull() for(ix=[-20,20]) for(iy=[65-10,65+5]) translate([ix,iy,-100-12+1]) cylinder(r=5,h=100+(3+0.6)-0.4);
+                
+            hull() for(ib=[0,5]) intersection() {
+                for(ix=[-20,20]) for(iy=[65-10,65+5]) translate([ix,iy,-100-12+1]) cylinder(r=5+ib,h=100+(3+0.6)-0.4);
+                trans_untilt() translate([-200,0,-100]) cube([400,200,100+4+(5-ib)]);
+            }
+        }
             
         translate([0,65,-12+1]) difference() {
             hull() for(ix=[-(17.5-5),(17.5-5)]) for(iy=[-20,12.5]) translate([ix,iy,0]) cylinder(r=5+0.4,h=50);
@@ -247,8 +343,17 @@ module camera_boss() {
 
 module sensor_boss() {
     hull() {
-        for(ix=[0]) for(iy=[0]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5,h=100);
-        for(ix=[-50*tan(15),50*tan(15)]) for(iy=[-50]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5,h=100);
+        for(ix=[-5,0]) for(iy=[0,7.5]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5,h=100);
+        for(ix=[-7.5*tan(45)-5]) for(iy=[7.5]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5,h=100);
+    }
+        
+    hull() for(ib=[0,5]) intersection() {
+        union() {
+        for(ix=[-5,0]) for(iy=[0,7.5]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5+ib,h=100);
+        for(ix=[-7.5*tan(45)-5]) for(iy=[7.5]) translate([30+ix,-85+iy,-100-(6.2)]) cylinder(r=5+ib,h=100);
+        }
+        
+        trans_untilt() translate([-200,-200,-100]) cube([400,400,100+4+(5-ib)]);
     }
 }
 
@@ -321,13 +426,25 @@ module foo() difference() {
 module base() {
     difference() {
         union() {
-            difference() {
+            *difference() {
                 trans_tilt() hull() {
                     crns_case(true,casecrn_rad);
                 }
                 translate([0,0,4]) cylinder(r=200,h=200);
                 translate([0,0,-200]) cylinder(r=200,h=200);
             }
+            
+            linear_extrude(height=4) projection(cut=true) {
+                trans_tilt() hull() {
+                    crns_case(true,casecrn_rad-2.4-0.4);
+                }
+            }
+            translate([0,-30+(30+5)/2,0]) for(ixm=[0,1]) mirror([ixm,0,0]) {
+                mnt_x = 85;
+                translate([mnt_x,0,0]) cylinder(r=2+2.4,h=4);
+            }
+            
+            
             //raspberry pi mount
             rasp_trans() rasp_mnt() {
                 cylinder(r=1.25+1.6,h=4+2.8);
@@ -342,13 +459,20 @@ module base() {
             cylinder(r=1.25,h=20);
         }
         
-        rasp_cab_co();
+        *rasp_cab_co();
         
+        //vent ramps    
+        for(ixm=[0,1]) mirror([ixm,0,0]) translate([46.25,71.25,0.2]) mk2_vent_co(25);
+        mirror([0,1,0]) translate([-27.5,87.5,0.2]) mk2_vent_co(50);
+        
+        
+        //mounting holes and alignment markers
         translate([0,-30+(30+5)/2,0]) for(ixm=[0,1]) mirror([ixm,0,0]) {
             mnt_x = 85;
             
             rotate([0,0,-5]) rotate_extrude(angle=2*5,$fn=$fn*16) translate([mnt_x-2,-1]) square([2*2,10]);
             for(ia=[-1,1]) rotate([0,0,5*ia]) translate([mnt_x,0,-1]) cylinder(r=2,h=10);
+                
             for(ia=[-1,0,1]) rotate([0,0,5*ia]) translate([mnt_x,0,4-0.6]) hull() {
                 for(ix=[0,-7.5]) translate([ix,0,0]) cylinder(r1=0,r2=1,h=1);
             }
@@ -357,25 +481,28 @@ module base() {
             }
         }
         
+        //cutouts
         hull() for(ix=[-60,60]) for(iy=[5,40]) {
             translate([ix,iy,-1]) cylinder(r=5,h=50);
         }
-        
         rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,-10]) {
             hull() for(ix=[-10,10]) for(iy=[-50,20]) {
                 translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
             }
-            hull() for(ix=[-25,25]) for(iy=[50,65]) {
+            hull() for(ix=[-10,25]) for(iy=[50,65]) {
                 translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
             }
         }
         
+        //cable port and cable tie holes
         translate([0,-7.5,-0.01]) {
-            cylinder(r=3.75,h=50);
-            cylinder(r1=3.75+0.5,r2=3.75,h=0.5);
-            translate([0,0,4-0.5+2*0.01]) cylinder(r1=3.75,r2=3.75+0.5,h=0.5);
+            translate([0,7.5+(-30+(30+5)/2),0]) {
+                hull() for(ix=[-4,4]) for(iy=[-2,7.5-2]) translate([ix,iy,0]) cylinder(r=3.75,h=50);
+                hull() for(ix=[-4,4]) for(iy=[-2,7.5-2]) translate([ix,iy,0]) cylinder(r1=3.75+0.5,r2=3.75,h=0.5);
+                hull() for(ix=[-4,4]) for(iy=[-2,7.5-2]) translate([ix,iy,4-0.5+2*0.01]) cylinder(r1=3.75,r2=3.75+0.5,h=0.5);
+            }
             
-            for(ix=[-15,-15-15]) {
+            for(ix=[25,25+15]) {
                 for(iy=[0,1]) mirror([0,iy,0]) translate([ix,2+1.2,0]) cylinder(r=2,h=50);
                     
                 for(iy=[0,1]) mirror([0,iy,0]) hull() {
@@ -390,7 +517,32 @@ module base() {
                 hull() for(iy=[0,1]) mirror([0,iy,0]) translate([ix,2+1.2,0]) cylinder(r1=2+0.5,r2=2,h=0.5);
             }
         }
+        
+        //cutouts for attaching wall to base
+        wall_attach_pos() {
+            hull() for(ix=[0,20]) translate([ix,0,1]) {
+                cylinder(r=5+0.25+2.4+0.5-0.25,h=50);
+                translate([0,0,0.25]) cylinder(r=5+0.25+2.4+0.5,h=50);
+            }
+            translate([0,0,8]) screw_co(8,1.2,50);
+        }
     }
+    
+    //studs for attaching wall to base
+    wall_attach_pos() difference() {
+        union() {
+            hull() {
+                cylinder(r=5-0.25-0.25,h=4+4);
+                cylinder(r=5-0.25,h=4+4-0.25);
+            }
+            hull() {
+                cylinder(r=5-0.25+0.25,h=1);
+                cylinder(r=5-0.25,h=1+0.25);
+            }
+        }
+        translate([0,0,8]) screw_co(8,1.2,50);
+    }
+        
     *intersection() {
         translate([0,-30+(30+5)/2,0]) for(ixm=[0,1]) mirror([ixm,0,0]) {
             mnt_x = 85;
@@ -421,6 +573,20 @@ module base() {
     }
 }
 
+
+module mk2_vent_co(wid=10) rotate([0,0,90]) {
+    rotate([90,0,0]) rotate_extrude(angle=90-atan((4-0.2)/10)) mk2_vent_co_cs(wid);
+    translate([0,0,-10+0.01]) linear_extrude(height=10) mk2_vent_co_cs(wid);
+    rotate([0,-(90-atan((4-0.2)/10)),0]) translate([0,0,-0.01]) linear_extrude(height=20) mk2_vent_co_cs(wid);
+}
+
+module mk2_vent_co_cs(wid) hull() {
+    translate([2,wid/2]) circle(r=2);
+    translate([2,-wid/2]) circle(r=2);
+    
+    translate([20,wid/2]) circle(r=2);
+    translate([20,-wid/2]) circle(r=2);
+}
 
 
 //frontplate
@@ -607,6 +773,10 @@ module rasp_cab_co(wall_co=false) {
 
 module trans_tilt() {
     translate([0,0,case_proj]) rotate([case_tilt,0,0]) children();
+}
+
+module trans_untilt() {
+    rotate([-case_tilt,0,0]) translate([0,0,-case_proj]) children();
 }
 
 
