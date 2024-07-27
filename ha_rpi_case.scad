@@ -18,12 +18,61 @@ case_tilt = -5; //how tilted is the case
 faceplate_thk = 2; //how thick is the facplate
 
 
+//assembled();
+
+/*components = [
+    "ha_rpi_case_mk2_frame",
+    "ha_rpi_case_mk2_shell",
+    "ha_rpi_case_mk2_cameramount_p1",
+    "ha_rpi_case_mk2_cameramount_p2",
+    "ha_rpi_case_mk2_sensormount",
+    "ha_rpi_case_mk2_face",
+];*/
+
+printable(/*components*/);
+
+
+module printable(components=[]) {
+    *frame();
+    *translate([0,200,0]) walls();
+    
+    *rotate([0,180,0]) translate([0,200+50,12-(3+0.6+1)]) camera_plate();
+    *translate([0,200+50+30,12-(3+0.6+1)]) camera_plate2();
+    *translate([0,200+50+30+185,6.2]) sensor_plate();
+    
+    *trans_tilt() faceplate();
+    //echo(search(components, "ha_rpi_case_mk2_frame"));
+}
+
+module assembled() {
+    frame();
+    *walls();
+    
+    *trans_tilt() camera_plate();
+    *trans_tilt() camera_plate2();
+    *trans_tilt() sensor_plate();
+    
+    *trans_tilt() faceplate();
+    
+    //placeholder components
+    *union() {
+        trans_tilt() rotate([0,0,0]) screen_co();
+        translate([0,0,8]) poe_co();
+        trans_tilt() camera_pos() camera_co();
+        rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,4+2.8]) {
+            translate([0,85-20,0]) cube([56,20,17.4]);
+            cube([56,85,5]);
+        }
+    }
+}
+
+/*
 $vpr = [90-7.5, 0, 30];
 $vpt = [0, -25, -12.5];
 $vpd = 650;
 $t=1;
 
-!rotate([90,0,0]) union() {
+rotate([90,0,0]) union() {
     drop_assmb(1) import("/Users/tsnoad/Desktop/3d Parts/Homeassistant Case/ha_rpi_case_mk2_frame.stl");
     
     
@@ -41,24 +90,22 @@ $t=1;
 module drop_assmb(num) {
     translate([0,0,500*pow(min(0,$t-(num+3)/(6+3)),2)]) children();
 }
+*/
 
 
-*%trans_tilt() screen_co();
-*%trans_tilt() translate([0,65,-12]) !camera_co();
-%rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,4+2.8]) {
-    translate([0,85-20,0]) cube([56,20,17.4]);
-    cube([56,85,5]);
-}
 
-//camera clamp
-*trans_tilt() camera_plate();
-*trans_tilt() camera_plate2();
-*walls();
-*base();
 
-*trans_tilt() difference() {
-    !faceplate();
-    //translate([17.5,-200,-50]) cube([200,400,200]);
+module frame() difference() {
+    union() {
+        base();
+        bosses();
+    }
+    
+    base_co();
+    
+    poe_pos() translate([0,0,8+0.01]) poe_co();
+    
+    trans_tilt() presence_sensor_pos() translate([0,0,0.01]) presence_sensor_co();
 }
 
 
@@ -86,7 +133,6 @@ module bosses() difference() {
         poe_boss();
     }
     
-    base_co();
     
     trans_tilt() {
         translate([0,0,0.01]) {
@@ -101,8 +147,6 @@ module bosses() difference() {
             for(ix=[30]) for(iy=[-85]) translate([ix,iy,0]) screw_co(8,1.2,6.2);
         }
     }
-    
-    poe_pos() translate([0,0,8+0.01]) poe_co();
     
     translate([0,0,-200]) cylinder(r=200,h=200);
 }
@@ -125,7 +169,7 @@ module sensor_plate() difference() {
     
     translate([0,0,0.01])  touch_sensor_pos() touch_sensor_co();
     
-    translate([55,-85,-6.2+1.2+2.4+0.01])  presence_sensor_co();
+    presence_sensor_pos() translate([0,0,-0.01]) presence_sensor_co();
     
     
     translate([0,0,-(6.2)]) {
@@ -380,6 +424,10 @@ module touch_sensor_co(not_faceplate=true) {
    }
 }
 
+module presence_sensor_pos() {
+    translate([55,-85,-6.2+1.2+2.4]) children();
+}
+
 //datum is top of pcb
 module presence_sensor_co() {
     co_h = 6.2-1.2-2.4;
@@ -398,9 +446,15 @@ module presence_sensor_co() {
     hull() for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) {
         translate([0,0,-1.2]) cylinder(r=1.25,h=co_h+1.2);
     }
-    for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) hull() {
+    for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) {
         translate([0,0,-8]) cylinder(r=1.25,h=10);
-        translate([0,0,-8-1.25]) cylinder(r=0.01,h=10);
+    }
+    hull() for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) {
+        translate([0,0,-8]) cylinder(r=1.75,h=8-2.4-1.2);
+        translate([0,0,-8-1.75]) cylinder(r=0.01,h=8-2.4-1.2);
+    }
+    hull() for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) {
+        translate([0,0,-8]) cylinder(r=1.25,h=10);
     }
     hull() for(ix=[0,1]) mirror([ix,0,0]) translate([22/2+1.6+1.25,1.5,0]) {
         cylinder(r=5,h=co_h);
@@ -423,7 +477,7 @@ module foo() difference() {
 }
 
 
-//base
+
 module base() {
     difference() {
         union() {
@@ -456,9 +510,6 @@ module base() {
             }
         }
         
-        
-        poe_pos() translate([0,0,8+0.01]) poe_co();
-        
         rasp_trans() translate([0,0,-1]) rasp_mnt() {
             cylinder(r=1.25,h=20);
         }
@@ -484,8 +535,6 @@ module base() {
                 for(ix=[0,-5]) translate([ix,0,0]) cylinder(r1=0,r2=1,h=1);
             }
         }
-        
-        base_co();
         
         //cable port and cable tie holes
         translate([0,-7.5,-0.01]) {
@@ -663,7 +712,7 @@ module faceplate() union() {
         }
         
         translate([0,0,-0.01])  touch_sensor_pos() touch_sensor_co(false);
-        translate([55,-85,-6.2+1.2+2.4-0.01])  presence_sensor_co();
+        presence_sensor_pos() translate([0,0,-0.01]) presence_sensor_co();
         
         *for(ix2=[-17.5,17.5]) translate([ix2,-85,1.6-0.4]) {
             hull() for(ix=[-11/2,11/2]) for(iy=[-11/2,-11/2+15]) translate([ix,iy,-10]) cylinder(r=0.5+2.4+0.5,h=10);
