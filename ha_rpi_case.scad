@@ -82,11 +82,11 @@ module bosses() difference() {
             }
         }
         trans_tilt() corner_bosses();
+        
+        poe_boss();
     }
     
-    hull() for(ix=[-60,60]) for(iy=[5,40]) {
-        translate([ix,iy,-1]) cylinder(r=5,h=50);
-    }
+    base_co();
     
     trans_tilt() {
         translate([0,0,0.01]) {
@@ -101,6 +101,8 @@ module bosses() difference() {
             for(ix=[30]) for(iy=[-85]) translate([ix,iy,0]) screw_co(8,1.2,6.2);
         }
     }
+    
+    poe_pos() translate([0,0,8+0.01]) poe_co();
     
     translate([0,0,-200]) cylinder(r=200,h=200);
 }
@@ -454,6 +456,9 @@ module base() {
             }
         }
         
+        
+        poe_pos() translate([0,0,8+0.01]) poe_co();
+        
         rasp_trans() translate([0,0,-1]) rasp_mnt() {
             cylinder(r=1.25,h=20);
         }
@@ -480,18 +485,7 @@ module base() {
             }
         }
         
-        //cutouts
-        hull() for(ix=[-60,60]) for(iy=[5,40]) {
-            translate([ix,iy,-1]) cylinder(r=5,h=50);
-        }
-        rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,-10]) {
-            hull() for(ix=[-10,10]) for(iy=[-50,20]) {
-                translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
-            }
-            hull() for(ix=[-10,25]) for(iy=[50,65]) {
-                translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
-            }
-        }
+        base_co();
         
         //cable port and cable tie holes
         translate([0,-7.5,-0.01]) {
@@ -568,6 +562,28 @@ module base() {
         }
         trans_tilt() hull() {
             crns_case(true,casecrn_rad);
+        }
+    }
+}
+
+module base_co() {
+    //cutouts
+    hull() for(ix=[-60,60]) for(iy=[5+14+5+5,40]) {
+        translate([ix,iy,-1]) cylinder(r=5,h=50);
+    }
+    hull() for(ix=[-65+51.5+2*5,60]) for(iy=[5,40]) {
+        translate([ix,iy,-1]) cylinder(r=5,h=50);
+    }
+    translate([-65+51.5+2*5-5,5+14+5,-1]) linear_extrude(height=50) difference() {
+        translate([-5,-5]) square([2*5,2*5]);
+        translate([-5,-5]) circle(r=5);
+    }
+    rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,-10]) {
+        hull() for(ix=[-10,10]) for(iy=[-50,20]) {
+            translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
+        }
+        hull() for(ix=[-10,25]) for(iy=[50,65]) {
+            translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
         }
     }
 }
@@ -939,6 +955,53 @@ module camera_co(pcb_m=0.5,include_screws=true) {
             translate([0,0,3+0.6]) screw_co(8,1.2,50);
         }
     }
+}
+
+module poe_pos() {
+    translate([-65,5,0]) children();
+}
+
+module poe_boss() {
+    poe_pos() hull() for(ix=[0,51.5]) for(iy=[0,14]) translate([ix,iy,0]) cylinder(r=5,8);
+    poe_pos() hull() for(ix=[0,51.5]) for(iy=[-7.5,14]) translate([ix,iy,0]) cylinder(r=5,8);
+}
+
+module poe_co(pcb_m=0.5) {
+    difference() {
+        hull() for(ix=[0,51.5]) for(iy=[0,14]) translate([ix,iy,-1.6-2.4]) cylinder(r=pcb_m,1.6+2.4);
+            
+        hull() for(ix=[-5,4.2-1.6]) for(iy=[2.3+1.6,9.9-1.6]) translate([ix,iy,-10-1.6]) cylinder(r=1.6,h=10);
+            
+        hull() for(ix=[15.6+1.6,35.7-1.6]) for(iy=[14-1.2+1.6]) translate([ix,iy,-10-1.6]) cylinder(r=1.6,h=10);
+            
+        hull() for(ix=[30+1.6,33.8-1.6]) for(iy=[-5,3.2-1.6]) translate([ix,iy,-10-1.6]) cylinder(r=1.6,h=10);
+    }
+    
+    for(iy=[-1.75,14+1.75]) translate([37,iy,-25]) cylinder(r=1.25,h=50);
+    hull() for(iy=[-1.75,14+1.75]) translate([37,iy,-4]) cylinder(r=1.75,h=4);
+        
+    //transformer
+    hull() for(ix=[11.7,11.7+13.6]) for(iy=[0,14]) translate([ix,iy,-1.6]) cylinder(r=pcb_m,13.5);
+        
+    //semiconductor
+    hull() for(ix=[17,17+6]) for(iy=[0,6.4]) translate([ix,iy,-4]) cylinder(r=pcb_m,4);
+       
+    //vent co
+    hull() {
+        for(ix=[11.7,11.7+13.6]) for(iy=[0,14+20]) translate([ix,iy,-(4+4-0.6)]) cylinder(r=pcb_m,(4+4-0.6));
+        for(ix=[11.7,11.7+13.6]) for(iy=[-7.5-5+2.5,14+20]) translate([ix,iy,-4]) cylinder(r=pcb_m,4);
+    }
+    hull() for(ix=[11.7,11.7+13.6]) for(iy=[-7.5-5,14+20]) translate([ix,iy,-4]) cylinder(r=pcb_m,4);
+        
+    for(ix=[11.7,11.7+13.6]) translate([ix+(ix==11.7?-1:1)*pcb_m,-7.5-5,-4]) linear_extrude(height=4) difference() {
+        translate([-1,-1]) square([2*1,2*1]);
+        translate([(ix==11.7?-1:1),1]) circle(r=1);
+    }
+        
+    //pins
+    hull() for(ix=[0,1.4+2.5*2.54]) for(iy=[14,14-(1.4+0.5*2.54)]) translate([ix,iy,-4]) cylinder(r=pcb_m,4);
+        
+    hull() for(ix=[51.5,51.5-(1.8+3.5*2.54)]) for(iy=[14,14-(1.4+0.5*2.54)]) translate([ix,iy,-4]) cylinder(r=pcb_m,4);
 }
 
 
