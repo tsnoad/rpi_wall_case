@@ -616,7 +616,7 @@ module base() {
 }
 
 module base_co() {
-    //cutouts
+    //top cutout
     hull() for(ix=[-60,60]) for(iy=[5+14+5+5,40]) {
         translate([ix,iy,-1]) cylinder(r=5,h=50);
     }
@@ -627,11 +627,14 @@ module base_co() {
         translate([-5,-5]) square([2*5,2*5]);
         translate([-5,-5]) circle(r=5);
     }
+    
     rasp_trans() rotate([0,0,-90]) translate([-56/2,-85/2,-10]) {
+        //cutout under rpi, including sd card
         hull() for(ix=[-10,10]) for(iy=[-50,20]) {
             translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
         }
-        hull() for(ix=[-10,25]) for(iy=[50,65]) {
+        //cutout under rpi ports
+        hull() for(ix=[-17.5,25]) for(iy=[50,67.5]) {
             translate([56/2+ix,(87.1-15)/2+iy,-1]) cylinder(r=5,h=50);
         }
     }
