@@ -3,39 +3,75 @@
 import RPi.GPIO as GPIO
 import time
 import subprocess
+import logging
+import json
+import requests
+from datetime import datetime
 
-#set up gpio
-GPIO.setmode(GPIO.BOARD) #use GPIO numbers instead of pin numbers
-GPIO.setup(7, GPIO.IN) #presence sensor
-GPIO.setup(19, GPIO.IN) #touch sensor
+# Set up logging for monitoring
+logging.basicConfig(filename='screen_control.log', level=logging.INFO,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
-#we'll need to keep track of whether we've already turned the screen on or off
+# Define API endpoint for remote monitoring
+API_URL = "http://example.com/api/update"  # Replace with your actual endpoint
+
+# Set up GPIO
+GPIO.setmode(GPIO.BOARD)  # Use GPIO numbers instead of pin numbers
+GPIO.setup(7, GPIO.IN)     # Presence sensor
+GPIO.setup(19, GPIO.IN)    # Touch sensor
+
+# Track whether the screen is on or off
 screen_on = True
 
-#continuous loop
+def change_brightness(level):
+    """Change the screen brightness."""
+    subprocess.run(["./RPi-USB-Brightness/64/lite/Raspi_USB_Backlight_nogui", "-b", str(level)])
+    logging.info(f'Brightness set to {level}')
+
+def send_status_update(presence_value, touch_value):
+    """Send status update to a remote server."""
+    payload = {
+        'timestamp': datetime.now().isoformat(),
+        'presence': presence_value,
+        'touch': touch_value,
+        'screen_on': screen_on
+    }
+    try:
+        response = requests.post(API_URL, json=payload)
+        if response.status_code == 200:
+            logging.info('Status update sent successfully.')
+        else:
+            logging.warning(f'Failed to send status update: {response.status_code}')
+    except Exception as e:
+        logging.error(f'Error sending status update: {e}')
+
+# Continuous loop
 while True:
-        #is someone present?
-        presence_value = GPIO.input(7)
-        print(presence_value)
-        touch_value = GPIO.input(19)
-        #print(touch_value)
-        #presence_value = touch_value
+    # Read sensor values
+    presence_value = GPIO.input(7)
+    touch_value = GPIO.input(19)
 
-        #if someone is present, but the screen is off, or vise-versa
-        if screen_on ^ presence_value:
-                #create a range which we'll use to slowly change the brightness of the screen
-                if presence_value:
-                        brightness_steps = range(0,10)
-                else:
-                        brightness_steps = reversed(range(0,10))
+    logging.debug(f'Presence: {presence_value}, Touch: {touch_value}')  # Log sensor readings
 
-                #slowly change the brightness of the screen
-                for i in brightness_steps:
-                        subprocess.run(["./RPi-USB-Brightness/64/lite/Raspi_USB_Backlight_nogui", "-b", str(i)])
-                        time.sleep(0.01)
+    # If the screen state needs to change based on presence
+    if screen_on ^ presence_value:
+        # Create a range to slowly change the brightness of the screen
+        brightness_steps = range(0, 10) if presence_value else reversed(range(0, 10))
 
-                #remember if we've turned the screen on or off
-                screen_on = presence_value
+        # Slowly change the brightness
+        for i in brightness_steps:
+            change_brightness(i)
+            time.sleep(0.01)
 
-        #wait a bit before we run the loop again
-        time.sleep(1)
+        # Update screen state
+        screen_on = presence_value
+        logging.info(f'Screen turned {"on" if screen_on else "off"}')
+
+    # Send status update to remote server
+    send_status_update(presence_value, touch_value)
+
+    # Wait before the next loop iteration
+    time.sleep(1)
+
+# Clean up GPIO on exit
+GPIO.cleanup()
