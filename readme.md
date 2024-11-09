@@ -96,23 +96,27 @@ This will trigger the expo view which shows an overview of all workspaces. At th
 Next, add the following lines to the `.config/wayfire.ini` file:
 ```
 [autostart]
+# Automatically open some apps in browser windows
+browser_workspace1 = chromium --new-window --window-name="workspace1" --start-maximized --start-fullscreen "http://homeassistant.local:8123"
+browser_workspace2 = chromium --new-window --window-name="workspace2" --start-maximized --start-fullscreen "http://homeassistant.local:8123/dashboard-weather"
+browser_workspace3 = chromium --new-window --window-name="workspace3" --start-maximized --start-fullscreen "http://klipper.local"
 # Automatically start the backlight control script when the Raspberry Pi boots up
 kiosk_script = lxterminal -e "~/ha_rpi_kiosk_control.py"
-# Automatically open some apps in browser windows
-browser_ha = chromium --new-window "http://homeassistant.local:8123"
-browser_klipper = chromium --new-window "http://klipper.local"
+top_script = lxterminal -e "top" #optional
 ```
-This will automatically start the backlight control script when the Raspberry Pi boots, and will also start a couple of browser-based apps. You will need to change these lines depending on the apps you want to run
+This will automatically start the backlight control script when the Raspberry Pi boots, and will also start a couple of browser-based apps. You will need to change these lines depending on the apps you want to run, and what apps or sites you want them to display. The important part is `--window-name="workspace[1-9]"` which we'll use to put each window where we want it in the next step
 
 Finally, add the following lines to the `.config/wayfire.ini` file:
 ```
 [window-rules]
-kiosk_script_move = on created if app_id is "lxterminal" then assign_workspace 2 0 && maximize
-#browser_klipper_move = on created if app_id is "chromium" then assign_workspace 1 0
-#browser_ha_move = on created if title contains "Home Assistant" then assign_workspace 1 0
+# Move each browser window to its own workspace
+browser_workspace1_move = on created if title is "workspace1" then assign_workspace 0 0
+browser_workspace2_move = on created if title is "workspace2" then assign_workspace 1 0
+browser_workspace3_move = on created if title is "workspace3" then assign_workspace 2 0
+# Move the terminal running the backlight control script to its own workspace
+kiosk_script_maximize = on created if app_id is "lxterminal" then maximize
+kiosk_script_move = on created if app_id is "lxterminal" then assign_workspace 3 0
 ```
-These window rules will tell Wayland to move an app to a particular workspace when it starts. Eg, `lxterminal` (in which the backlight control script should be running) is moved to workspace `2 0`, meaning column 3, row 1 of the grid of workspaces.
-
-So far I haven't been able to assign different browser-based apps to different workspaces, as they all have the same `app_id` (`chromium`), so the rule moves all browser windows, instead of just one. I'll update this readme if/when I find a solution to this
+These window rules will tell Wayland to move an app to a particular workspace when it starts. Eg, `lxterminal` (in which the backlight control script should be running) is moved to workspace `3 0`, meaning column 4, row 1 of the grid of workspaces.
 
 Now, restart the Raspberry Pi and wait to see if all of this has worked as expected... Good luck!
